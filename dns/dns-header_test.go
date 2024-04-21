@@ -1,7 +1,7 @@
 package dns
 
 import (
-	bytepacketbuffer "dns-client-go/byte-packet-buffer"
+	bytepacketbuffer "dns-client-go/packetbuffer"
 	resultcode "dns-client-go/result-code"
 	"testing"
 )

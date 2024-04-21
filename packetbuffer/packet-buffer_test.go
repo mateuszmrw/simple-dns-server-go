@@ -1,4 +1,4 @@
-package bytepacketbuffer
+package packetbuffer
 
 import (
 	"reflect"
@@ -7,7 +7,7 @@ import (
 
 func TestBytePacketBuffer_Read(t *testing.T) {
 	data := []byte{0x12, 0x34, 0x56, 0x78}
-	bpb := BytePacketBuffer{
+	bpb := PacketBuffer{
 		Buffer:   data,
 		position: 0,
 	}
@@ -34,7 +34,7 @@ func TestReadQname(t *testing.T) {
 	data := []byte{
 		0x03, 'w', 'w', 'w', 0x06, 'g', 'o', 'o', 'g', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00,
 	}
-	buffer1 := BytePacketBuffer{
+	buffer1 := PacketBuffer{
 		Buffer:   data,
 		position: 0,
 	}
@@ -65,7 +65,7 @@ func TestReadQnameWithJump(t *testing.T) {
 	copy(bpb.Buffer, packet)
 
 	// Set the position to the start of the QNAME in the question section
-	bpb.Set(12)
+	bpb.SetPosition(12)
 
 	parsedQname, err := bpb.ReadQname("")
 
@@ -92,7 +92,7 @@ func TestReadQnameWithTwoJumps(t *testing.T) {
 	copy(bpb.Buffer, packet)
 
 	// Set the position to the start of the QNAME in the question section
-	bpb.Set(12)
+	bpb.SetPosition(12)
 
 	parsedQname, err := bpb.ReadQname("")
 
@@ -120,7 +120,7 @@ func TestReadQnameWithThreeJumps(t *testing.T) {
 	copy(bpb.Buffer, packet)
 
 	// Set the position to the start of the QNAME in the question section
-	bpb.Set(12)
+	bpb.SetPosition(12)
 
 	parsedQname, err := bpb.ReadQname("")
 
@@ -148,7 +148,7 @@ func TestReadQnameWithFourJumps(t *testing.T) {
 	copy(bpb.Buffer, packet)
 
 	// Set the position to the start of the QNAME in the question section
-	bpb.Set(12)
+	bpb.SetPosition(12)
 
 	parsedQname, err := bpb.ReadQname("")
 
@@ -191,7 +191,7 @@ func TestBytePacketBuffer_Write_qname(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bpb := NewPacketBuffer()
-			err := bpb.Write_qname(tt.qname)
+			err := bpb.WriteQname(tt.qname)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Write_qname() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -1,7 +1,7 @@
 package dns
 
 import (
-	bytepacketbuffer "dns-client-go/byte-packet-buffer"
+	bytepacketbuffer "dns-client-go/packetbuffer"
 	querytype "dns-client-go/query-type"
 	"errors"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type WriteableRecord interface {
-	Write(buffer *bytepacketbuffer.BytePacketBuffer)
+	Write(buffer *bytepacketbuffer.PacketBuffer)
 }
 
 type UnknownRecord struct {
@@ -61,7 +61,7 @@ type DnsRecord struct {
 	AAAA    *AAAARecord
 }
 
-func (dr *DnsRecord) Read(buffer *bytepacketbuffer.BytePacketBuffer) DnsRecord {
+func (dr *DnsRecord) Read(buffer *bytepacketbuffer.PacketBuffer) DnsRecord {
 	domain := ""
 	domain, _ = buffer.ReadQname(domain)
 
@@ -164,8 +164,8 @@ func (dr *DnsRecord) Read(buffer *bytepacketbuffer.BytePacketBuffer) DnsRecord {
 	return DnsRecord{}
 }
 
-func (a *ARecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
-	buffer.Write_qname(a.domain)
+func (a *ARecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
+	buffer.WriteQname(a.domain)
 	buffer.Write_uint16(uint16(querytype.A))
 	buffer.Write_uint16(1) // IN Class
 	buffer.Write_uint32(a.ttl)
@@ -185,8 +185,8 @@ func (a *ARecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
 	buffer.Write_uint8(ips[3])
 }
 
-func (ns *NSRecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
-	buffer.Write_qname(ns.domain)
+func (ns *NSRecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
+	buffer.WriteQname(ns.domain)
 	buffer.Write_uint16(uint16(querytype.NS))
 	buffer.Write_uint16(1) // IN Class
 
@@ -194,14 +194,14 @@ func (ns *NSRecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
 
 	buffer.Write_uint16(0) // Set Placeholder for the NS Host length
 
-	buffer.Write_qname(ns.host)
+	buffer.WriteQname(ns.host)
 
 	size := buffer.Pos() - (pos + 2)
 	buffer.SetValue_u16(pos, uint16(size)) // Update Placeholder
 }
 
-func (mx *MXRecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
-	buffer.Write_qname(mx.domain)
+func (mx *MXRecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
+	buffer.WriteQname(mx.domain)
 	buffer.Write_uint16(uint16(querytype.MX))
 	buffer.Write_uint16(1) // IN Class
 	buffer.Write_uint32(mx.ttl)
@@ -210,14 +210,14 @@ func (mx *MXRecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
 	buffer.Write_uint32(0) // Set Placeholder for MX data length
 
 	buffer.Write_uint16(mx.priority)
-	buffer.Write_qname(mx.host)
+	buffer.WriteQname(mx.host)
 
 	size := buffer.Pos() - (pos + 2)
 	buffer.SetValue_u16(pos, uint16(size)) // Update placeholder
 }
 
-func (cn *CNAMERecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
-	buffer.Write_qname(cn.domain)
+func (cn *CNAMERecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
+	buffer.WriteQname(cn.domain)
 	buffer.Write_uint16(uint16(querytype.CNAME))
 	buffer.Write_uint16(1) // IN Class
 	buffer.Write_uint32(cn.ttl)
@@ -225,14 +225,14 @@ func (cn *CNAMERecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
 	pos := buffer.Pos()
 	buffer.Write_uint16(0) // Allocate a placeholder for CNAME length
 
-	buffer.Write_qname(cn.host)
+	buffer.WriteQname(cn.host)
 
 	size := buffer.Pos() - (pos + 2)
 	buffer.SetValue_u16(pos, uint16(size)) // Update placeholder with CNAME length
 }
 
-func (aaaa *AAAARecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
-	buffer.Write_qname(aaaa.domain)
+func (aaaa *AAAARecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
+	buffer.WriteQname(aaaa.domain)
 	buffer.Write_uint16(uint16(querytype.AAAA))
 	buffer.Write_uint16(1) // IN Class
 	buffer.Write_uint32(aaaa.ttl)
@@ -244,7 +244,7 @@ func (aaaa *AAAARecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) {
 	}
 }
 
-func (dr *DnsRecord) Write(buffer *bytepacketbuffer.BytePacketBuffer) (uint, error) {
+func (dr *DnsRecord) Write(buffer *bytepacketbuffer.PacketBuffer) (uint, error) {
 	startPos := buffer.Pos()
 
 	switch {

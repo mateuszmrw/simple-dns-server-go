@@ -1,7 +1,7 @@
 package dns
 
 import (
-	bytepacketbuffer "dns-client-go/byte-packet-buffer"
+	bytepacketbuffer "dns-client-go/packetbuffer"
 	queryType "dns-client-go/query-type"
 )
 
@@ -24,7 +24,7 @@ func NewPacket() *DnsPacket {
 	}
 }
 
-func (dp *DnsPacket) FromBuffer(buffer *bytepacketbuffer.BytePacketBuffer) *DnsPacket {
+func (dp *DnsPacket) FromBuffer(buffer *bytepacketbuffer.PacketBuffer) *DnsPacket {
 	packet := NewPacket()
 	packet.Header.Read(buffer)
 
@@ -56,7 +56,7 @@ func (dp *DnsPacket) FromBuffer(buffer *bytepacketbuffer.BytePacketBuffer) *DnsP
 
 }
 
-func (dp *DnsPacket) Write(buffer *bytepacketbuffer.BytePacketBuffer) *DnsPacket {
+func (dp *DnsPacket) Write(buffer *bytepacketbuffer.PacketBuffer) *DnsPacket {
 	dp.Header.Questions = uint16(len(dp.Question))
 	dp.Header.Answers = uint16(len(dp.Answers))
 	dp.Header.AuthoritiveEntries = uint16(len(dp.Authorities))

@@ -1,4 +1,4 @@
-package bytepacketbuffer
+package packetbuffer
 
 import (
 	"errors"
@@ -9,41 +9,41 @@ const bufferSize = 512
 
 var errEndOfBuffer = errors.New("end of buffer")
 
-type BytePacketBuffer struct {
+type PacketBuffer struct {
 	Buffer   []byte
 	position uint
 }
 
-func NewPacketBuffer() BytePacketBuffer {
-	return BytePacketBuffer{
+func NewPacketBuffer() PacketBuffer {
+	return PacketBuffer{
 		Buffer:   make([]byte, bufferSize),
 		position: 0,
 	}
 }
 
-func (bpb BytePacketBuffer) Pos() uint {
+func (bpb PacketBuffer) Pos() uint {
 	return bpb.position
 }
 
-func (bpb *BytePacketBuffer) Step(steps uint) {
+func (bpb *PacketBuffer) Step(steps uint) {
 	bpb.position += steps
 }
 
-func (bpb *BytePacketBuffer) Set(pos uint) {
+func (bpb *PacketBuffer) SetPosition(pos uint) {
 	bpb.position = pos
 }
 
-func (bpb *BytePacketBuffer) SetValue_u8(pos uint, val uint8) {
+func (bpb *PacketBuffer) SetValue_u8(pos uint, val uint8) {
 	bpb.Buffer[pos] = val
 }
 
-func (bpb *BytePacketBuffer) SetValue_u16(pos uint, val uint16) {
+func (bpb *PacketBuffer) SetValue_u16(pos uint, val uint16) {
 	bpb.SetValue_u8(pos, uint8(val>>8))
 	bpb.SetValue_u8(pos+1, uint8(val&0xFF))
 }
 
 // Read single byte and move the position one step forward
-func (bpb *BytePacketBuffer) Read() (byte, error) {
+func (bpb *PacketBuffer) Read() (byte, error) {
 	if bpb.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return 0, newError
@@ -55,7 +55,7 @@ func (bpb *BytePacketBuffer) Read() (byte, error) {
 }
 
 // Get a single byte, without changing the buffer position
-func (bpb BytePacketBuffer) Get(pos uint) (byte, error) {
+func (bpb PacketBuffer) Get(pos uint) (byte, error) {
 	if bpb.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return 0, newError
@@ -63,7 +63,7 @@ func (bpb BytePacketBuffer) Get(pos uint) (byte, error) {
 	return bpb.Buffer[pos], nil
 }
 
-func (bpb BytePacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
+func (bpb PacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
 	if start+len >= bufferSize {
 		return nil, errEndOfBuffer
 	}
@@ -71,7 +71,7 @@ func (bpb BytePacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
 	return buffer, nil
 }
 
-func (bpb *BytePacketBuffer) Read_u16() (uint16, error) {
+func (bpb *PacketBuffer) Read_u16() (uint16, error) {
 	hi, err := bpb.Read()
 	if err != nil {
 		return 0, err
@@ -84,7 +84,7 @@ func (bpb *BytePacketBuffer) Read_u16() (uint16, error) {
 	return result, nil
 }
 
-func (bpb *BytePacketBuffer) Read_u32() (uint32, error) {
+func (bpb *PacketBuffer) Read_u32() (uint32, error) {
 	hi1, err := bpb.Read()
 	if err != nil {
 		return 0, err
@@ -105,7 +105,7 @@ func (bpb *BytePacketBuffer) Read_u32() (uint32, error) {
 	return result, nil
 }
 
-func (bpb *BytePacketBuffer) ReadQname(name string) (string, error) {
+func (bpb *PacketBuffer) ReadQname(name string) (string, error) {
 	var labels []string
 	var returnPos *uint
 
@@ -173,7 +173,7 @@ func (bpb *BytePacketBuffer) ReadQname(name string) (string, error) {
 	return strings.Join(labels, "."), nil
 }
 
-func (b *BytePacketBuffer) Write(val uint8) error {
+func (b *PacketBuffer) Write(val uint8) error {
 	if b.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return newError
@@ -183,17 +183,17 @@ func (b *BytePacketBuffer) Write(val uint8) error {
 	return nil
 }
 
-func (b *BytePacketBuffer) Write_uint8(val uint8) error {
+func (b *PacketBuffer) Write_uint8(val uint8) error {
 	return b.Write(val)
 }
 
-func (bpb *BytePacketBuffer) Write_uint16(val uint16) error {
+func (bpb *PacketBuffer) Write_uint16(val uint16) error {
 	bpb.Write(uint8(val >> 8))
 	bpb.Write(uint8(val & 0xFF))
 	return nil
 }
 
-func (b *BytePacketBuffer) Write_uint32(val uint32) error {
+func (b *PacketBuffer) Write_uint32(val uint32) error {
 	b.Write(uint8(((val >> 24) & 0xFF)))
 	b.Write(uint8(((val >> 16) & 0xFF)))
 	b.Write(uint8(((val >> 8) & 0xFF)))
@@ -201,7 +201,7 @@ func (b *BytePacketBuffer) Write_uint32(val uint32) error {
 	return nil
 }
 
-func (b *BytePacketBuffer) Write_qname(qname string) error {
+func (b *PacketBuffer) WriteQname(qname string) error {
 	for _, label := range strings.Split(qname, ".") {
 		len := len(label)
 		if len > 0x3F {

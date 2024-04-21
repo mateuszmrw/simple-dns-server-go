@@ -1,7 +1,7 @@
 package dns
 
 import (
-	bytepacketbuffer "dns-client-go/byte-packet-buffer"
+	bytepacketbuffer "dns-client-go/packetbuffer"
 	resultcode "dns-client-go/result-code"
 	util "dns-client-go/util"
 )
@@ -48,7 +48,7 @@ func NewHeader() *DnsHeader {
 	}
 }
 
-func (dh *DnsHeader) Read(buffer *bytepacketbuffer.BytePacketBuffer) *DnsHeader {
+func (dh *DnsHeader) Read(buffer *bytepacketbuffer.PacketBuffer) *DnsHeader {
 	dh.ID, _ = buffer.Read_u16()
 	flags, _ := buffer.Read_u16()
 
@@ -98,7 +98,7 @@ func (dh *DnsHeader) Read(buffer *bytepacketbuffer.BytePacketBuffer) *DnsHeader 
 	return dh
 }
 
-func (dh *DnsHeader) Write(buffer *bytepacketbuffer.BytePacketBuffer) *DnsHeader {
+func (dh *DnsHeader) Write(buffer *bytepacketbuffer.PacketBuffer) *DnsHeader {
 	buffer.Write_uint16(dh.ID)
 	buffer.Write_uint8(util.B2i8(dh.RecursionDesired) | (util.B2i8(dh.TruncatedMessage) << 1) | (util.B2i8(dh.AuthoritativeAnswer) << 2) | (dh.Opcode << 3) | uint8((util.B2i8(dh.Response) << 7)))
 	buffer.Write_uint8((uint8(dh.Rescode)) | (util.B2i8(dh.CheckingDisabled) << 4) | (util.B2i8(dh.AuthedData) << 5) | (util.B2i8(dh.Z) << 6) | (util.B2i8(dh.RecursionAvailable) << 7))

@@ -3,7 +3,7 @@ package dns
 import (
 	"testing"
 
-	bytepacketbuffer "dns-client-go/byte-packet-buffer"
+	bytepacketbuffer "dns-client-go/packetbuffer"
 	querytype "dns-client-go/query-type"
 
 	"github.com/stretchr/testify/assert"
