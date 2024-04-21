@@ -14,11 +14,11 @@ type DnsHeader struct {
 	opcode               uint8 // 4 bits
 	response             bool  // 1 bit
 
-	rescode             resultcode.ResultCode
-	checking_disabled   bool // 1 bit
-	authed_data         bool // 1 bit
-	z                   bool // 1 bit
-	recursion_available bool // 1 bit
+	rescode             resultcode.ResultCode // 4 bits
+	checking_disabled   bool                  // 1 bit
+	authed_data         bool                  // 1 bit
+	z                   bool                  // 1 bit
+	recursion_available bool                  // 1 bit
 
 	Questions             uint16 // 16 bits
 	answers               uint16 // 16 bits
@@ -52,17 +52,42 @@ func (dh *DnsHeader) Read(buffer *bytepacketbuffer.BytePacketBuffer) *DnsHeader 
 	dh.ID, _ = buffer.Read_u16()
 	flags, _ := buffer.Read_u16()
 
+	// The Recursion Desired (RD) flag. This is set to true if the client desires the server to perform a recursive query.
+	// RD is the highest bit (bit 15) of the flags.
 	dh.Recursion_desired = (flags>>15)&0x1 == 1
+
+	// The Truncated Message (TC) flag. This is set to true if the message was longer than permitted on the transmission channel.
+	// TC is the second highest bit (bit 14).
 	dh.truncated_message = (flags>>14)&0x1 == 1
 
-	dh.authoritative_answer = (flags>>10)&0x1 == 1
+	// The Opcode field. This specifies kind of query in this message. This value is a 4-bit field between bits 11-14.
 	dh.opcode = uint8((flags >> 11) & 0xf)
+
+	// The Authoritative Answer (AA) flag. This indicates that the responding name server is an authority for the domain name in question section.
+	// AA is the fifth bit from the top (bit 10).
+	dh.authoritative_answer = (flags>>10)&0x1 == 1
+
+	// The Response (QR) flag. This indicates whether this message is a query (0) or a response (1).
+	// QR is the bit just past the middle (bit 7).
 	dh.response = (flags>>7)&0x1 == 1
 
+	// The Response Code (RCODE) field. This is a 4-bit field that is set as part of responses.
+	// The RCODE specifies the outcome of the query, and is found in the lowest four bits.
 	dh.rescode = resultcode.ResultCode(flags & 0xf)
+
+	// The Checking Disabled (CD) flag. This is used in DNSSEC (DNS Security Extensions). It indicates that the security
+	// processing is disabled for this message. CD is the fourth lowest bit (bit 4).
 	dh.checking_disabled = (flags>>4)&0x1 == 1
+
+	// The Authenticated Data (AD) flag. This is also used in DNSSEC as an indication that all the data included
+	// in the answer and authority portion of the response have been authenticated by the server. AD is the third lowest bit (bit 3).
 	dh.authed_data = (flags>>3)&0x1 == 1
+
+	// The Zero (Z) flag. Reserved for future use. Must be zero in all queries and responses. This is the second lowest bit (bit 2).
 	dh.z = (flags>>2)&0x1 == 1
+
+	// The Recursion Available (RA) flag. This is set or cleared in a response, and denotes whether recursive query support is available in the name server.
+	// RA is the second lowest bit (bit 1).
 	dh.recursion_available = (flags>>1)&0x1 == 1
 
 	dh.Questions, _ = buffer.Read_u16()

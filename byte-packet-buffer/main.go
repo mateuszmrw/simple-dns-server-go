@@ -33,6 +33,15 @@ func (bpb *BytePacketBuffer) Set(pos uint) {
 	bpb.position = pos
 }
 
+func (bpb *BytePacketBuffer) SetValue_u8(pos uint, val uint8) {
+	bpb.Buffer[pos] = val
+}
+
+func (bpb *BytePacketBuffer) SetValue_u16(pos uint, val uint16) {
+	bpb.SetValue_u8(pos, uint8(val>>8))
+	bpb.SetValue_u8(pos+1, uint8(val&0xFF))
+}
+
 // Read single byte and move the position one step forward
 func (bpb *BytePacketBuffer) Read() (byte, error) {
 	if bpb.Pos() >= bufferSize {

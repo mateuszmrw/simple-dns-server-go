@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	name := "www.mrw.ovh"
-	qtype := querytype.A
+	name := "yahoo.com"
+	qtype := querytype.NS
 
 	server := "8.8.8.8:53"
 
@@ -34,10 +34,6 @@ func main() {
 
 	conn.Write(requestBuffer.Buffer)
 
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	bpb := packetbuffer.NewPacketBuffer()
 
 	_, err = conn.Read(bpb.Buffer)
