@@ -1,1 +1,1 @@
-# simple-dns-server-go
+# dns-client-go
