@@ -6,28 +6,28 @@ import (
 )
 
 type DnsQuestion struct {
-	name  string
-	qtype querytype.QueryType
+	Name  string
+	Qtype querytype.QueryType
 }
 
 func NewQuestion(name string, qtype querytype.QueryType) *DnsQuestion {
 	return &DnsQuestion{
-		name:  name,
-		qtype: qtype,
+		Name:  name,
+		Qtype: qtype,
 	}
 }
 
 func (dn *DnsQuestion) Read(buffer *bytepacketbuffer.BytePacketBuffer) {
-	dn.name, _ = buffer.ReadQname(dn.name)
+	dn.Name, _ = buffer.ReadQname(dn.Name)
 	qtBuffer, _ := buffer.Read_u16()
-	dn.qtype = querytype.QueryType(qtBuffer) // qtype
+	dn.Qtype = querytype.QueryType(qtBuffer) // qtype
 	_, _ = buffer.Read_u16()                 // class
 }
 
 func (dn *DnsQuestion) Write(buffer *bytepacketbuffer.BytePacketBuffer) *DnsQuestion {
-	buffer.Write_qname(dn.name)
+	buffer.Write_qname(dn.Name)
 
-	buffer.Write_uint16(uint16(dn.qtype))
+	buffer.Write_uint16(uint16(dn.Qtype))
 	buffer.Write_uint16(1)
 
 	return dn

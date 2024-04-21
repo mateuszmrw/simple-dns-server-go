@@ -44,8 +44,8 @@ func TestDnsQuestion_Read(t *testing.T) {
 			dq := &DnsQuestion{}
 			dq.Read(&buffer)
 
-			assert.Equal(t, tc.expectedName, dq.name)
-			assert.Equal(t, tc.expectedQType, dq.qtype)
+			assert.Equal(t, tc.expectedName, dq.Name)
+			assert.Equal(t, tc.expectedQType, dq.Qtype)
 
 		})
 	}
@@ -57,8 +57,8 @@ func TestDnsQuestion_Write(t *testing.T) {
 	qname := "google.com"
 	qtype := querytype.A
 	question := DnsQuestion{
-		name:  qname,
-		qtype: qtype,
+		Name:  qname,
+		Qtype: qtype,
 	}
 
 	question.Write(&buffer)

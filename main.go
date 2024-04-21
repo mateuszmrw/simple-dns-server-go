@@ -24,7 +24,7 @@ func main() {
 	rawPacket := &dns.DnsPacket{}
 
 	rawPacket.Header.ID = 1
-	rawPacket.Header.Recursion_desired = true
+	rawPacket.Header.RecursionDesired = true
 	question := dns.NewQuestion(name, qtype)
 	rawPacket.Question = append(rawPacket.Question, *question)
 	rawPacket.Header.Questions = 1

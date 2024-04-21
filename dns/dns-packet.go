@@ -29,24 +29,24 @@ func (dp *DnsPacket) FromBuffer(buffer *bytepacketbuffer.BytePacketBuffer) *DnsP
 	packet.Header.Read(buffer)
 
 	for i := 0; i < int(packet.Header.Questions); i++ {
-		question := DnsQuestion{name: "", qtype: queryType.QueryType(0)}
+		question := DnsQuestion{Name: "", Qtype: queryType.QueryType(0)}
 		question.Read(buffer)
 		packet.Question = append(packet.Question, question)
 	}
 
-	for i := 0; i < int(packet.Header.answers); i++ {
+	for i := 0; i < int(packet.Header.Answers); i++ {
 		record := DnsRecord{}
 		answer := record.Read(buffer)
 		packet.Answers = append(packet.Answers, answer)
 	}
 
-	for i := 0; i < int(packet.Header.authoritative_entries); i++ {
+	for i := 0; i < int(packet.Header.AuthoritiveEntries); i++ {
 		record := DnsRecord{}
 		record.Read(buffer)
 		packet.Authorities = append(packet.Authorities, record)
 	}
 
-	for i := 0; i < int(packet.Header.resource_entries); i++ {
+	for i := 0; i < int(packet.Header.ResourceEntries); i++ {
 		record := DnsRecord{}
 		record.Read(buffer)
 		packet.Authorities = append(packet.Authorities, record)
@@ -58,9 +58,9 @@ func (dp *DnsPacket) FromBuffer(buffer *bytepacketbuffer.BytePacketBuffer) *DnsP
 
 func (dp *DnsPacket) Write(buffer *bytepacketbuffer.BytePacketBuffer) *DnsPacket {
 	dp.Header.Questions = uint16(len(dp.Question))
-	dp.Header.answers = uint16(len(dp.Answers))
-	dp.Header.authoritative_entries = uint16(len(dp.Authorities))
-	dp.Header.resource_entries = uint16(len(dp.Resources))
+	dp.Header.Answers = uint16(len(dp.Answers))
+	dp.Header.AuthoritiveEntries = uint16(len(dp.Authorities))
+	dp.Header.ResourceEntries = uint16(len(dp.Resources))
 
 	dp.Header.Write(buffer)
 
