@@ -16,7 +16,6 @@ func recursiveLookup(qname string, qtype querytype.QueryType) (*dns.DnsPacket, e
 		fmt.Printf("attempting lookup of %v %v with ns %v\n", qtype, qname, ns)
 
 		response, err := lookup(qname, qtype, ns)
-		fmt.Println(response)
 		if err != nil {
 			return nil, err
 		}
