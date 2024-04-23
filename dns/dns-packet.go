@@ -3,6 +3,8 @@ package dns
 import (
 	bytepacketbuffer "dns-client-go/packetbuffer"
 	queryType "dns-client-go/query-type"
+	"net"
+	"strings"
 )
 
 type DnsPacket struct {
@@ -81,4 +83,47 @@ func (dp *DnsPacket) Write(buffer *bytepacketbuffer.PacketBuffer) *DnsPacket {
 	}
 
 	return dp
+}
+
+func (dp *DnsPacket) GetRandomA() net.IP {
+	for _, record := range dp.Answers {
+		if record.A != nil {
+			return net.ParseIP(record.A.addr)
+		}
+	}
+
+	return nil
+}
+
+func (dp *DnsPacket) GetNS(qname string) []NSRecord {
+	var nsRecords []NSRecord
+	for _, record := range dp.Authorities {
+		if record.NS != nil && strings.HasSuffix(qname, record.NS.domain) {
+			nsRecords = append(nsRecords, *record.NS)
+		}
+	}
+
+	return nsRecords
+}
+
+func (dp *DnsPacket) GetResolvedNS(qname string) net.IP {
+	nsRecords := dp.GetNS(qname)
+	for _, ns := range nsRecords {
+		for _, res := range dp.Resources {
+			if res.A != nil && res.A.domain == ns.domain {
+				return net.ParseIP(res.A.addr)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (dp *DnsPacket) GetUnresolvedNS(qname string) string {
+	nsRecords := dp.GetNS(qname)
+	if len(nsRecords) > 0 {
+		return nsRecords[0].host
+	}
+
+	return ""
 }

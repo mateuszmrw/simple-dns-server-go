@@ -64,7 +64,7 @@ func (pb PacketBuffer) Get(pos uint) (byte, error) {
 }
 
 func (pb PacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
-	if start+len >= bufferSize {
+	if start+len > bufferSize {
 		return nil, errEndOfBuffer
 	}
 	buffer := pb.Buffer[start : start+len]

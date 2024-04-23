@@ -9,10 +9,54 @@ import (
 	"net"
 )
 
-func lookup(qname string, qtype querytype.QueryType) (*dns.DnsPacket, error) {
-	server := "8.8.8.8:53"
+func recursiveLookup(qname string, qtype querytype.QueryType) (*dns.DnsPacket, error) {
+	ns := net.ParseIP("198.41.0.4") // a.root-servers.net
 
-	conn, err := net.Dial("udp", server)
+	for {
+		fmt.Printf("attempting lookup of %v %v with ns %v\n", qtype, qname, ns)
+
+		response, err := lookup(qname, qtype, ns)
+		fmt.Println(response)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Answers) > 0 && response.Header.Rescode == resultcode.NOERROR {
+			return response, nil
+		}
+
+		if response.Header.Rescode == resultcode.NXDOMAIN {
+			return response, nil
+		}
+
+		newNs := response.GetResolvedNS(qname)
+		if newNs != nil {
+			ns = newNs
+			continue
+		}
+
+		newNsName := response.GetUnresolvedNS(qname)
+		if newNsName == "" {
+			return response, nil
+		}
+
+		recursiveResponse, err := recursiveLookup(newNsName, querytype.A)
+		if err != nil {
+			return nil, err
+		}
+
+		newIp := recursiveResponse.GetRandomA()
+		if newIp != nil {
+			ns = newIp
+		} else {
+			return response, nil
+		}
+	}
+}
+
+func lookup(qname string, qtype querytype.QueryType, ns net.IP) (*dns.DnsPacket, error) {
+
+	conn, err := net.Dial("udp", fmt.Sprintf("%s:53", ns.To4().String()))
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +105,7 @@ func handleQuery(conn *net.UDPConn) error {
 	if len(request.Question) > 0 {
 		question := request.Question[0]
 
-		result, err := lookup(question.Name, question.Qtype)
+		result, err := recursiveLookup(question.Name, question.Qtype)
 		if err != nil {
 			response.Header.Rescode = resultcode.SERVFAIL
 		} else {

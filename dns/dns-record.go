@@ -194,7 +194,7 @@ func (mx *MXRecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
 	buffer.Write_uint32(mx.ttl)
 
 	pos := buffer.Pos()
-	buffer.Write_uint16(0) // Set Placeholder for MX data length
+	buffer.Write_uint16(0) // Set Placeholder for MX host and priority length
 
 	buffer.Write_uint16(mx.priority)
 	buffer.WriteQname(mx.host)
