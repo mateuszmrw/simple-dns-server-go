@@ -41,7 +41,7 @@ func TestReadQname(t *testing.T) {
 
 	expectedName1 := "www.google.com"
 	var outstr1 string
-	outstr1, err := buffer1.ReadQname(outstr1)
+	outstr1, err := buffer1.ReadQname()
 	if err != nil {
 		t.Errorf("Unexpected error while reading qname: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestReadQnameWithJump(t *testing.T) {
 	// Set the position to the start of the QNAME in the question section
 	bpb.SetPosition(12)
 
-	parsedQname, err := bpb.ReadQname("")
+	parsedQname, err := bpb.ReadQname()
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -94,7 +94,7 @@ func TestReadQnameWithTwoJumps(t *testing.T) {
 	// Set the position to the start of the QNAME in the question section
 	bpb.SetPosition(12)
 
-	parsedQname, err := bpb.ReadQname("")
+	parsedQname, err := bpb.ReadQname()
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -122,7 +122,7 @@ func TestReadQnameWithThreeJumps(t *testing.T) {
 	// Set the position to the start of the QNAME in the question section
 	bpb.SetPosition(12)
 
-	parsedQname, err := bpb.ReadQname("")
+	parsedQname, err := bpb.ReadQname()
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -150,7 +150,7 @@ func TestReadQnameWithFourJumps(t *testing.T) {
 	// Set the position to the start of the QNAME in the question section
 	bpb.SetPosition(12)
 
-	parsedQname, err := bpb.ReadQname("")
+	parsedQname, err := bpb.ReadQname()
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)

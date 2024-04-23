@@ -62,8 +62,7 @@ type DnsRecord struct {
 }
 
 func (dr *DnsRecord) Read(buffer *bytepacketbuffer.PacketBuffer) DnsRecord {
-	domain := ""
-	domain, _ = buffer.ReadQname(domain)
+	domain, _ := buffer.ReadQname()
 
 	qtypeNumber, _ := buffer.Read_u16()
 	qtype := querytype.QueryType(qtypeNumber)
@@ -73,50 +72,42 @@ func (dr *DnsRecord) Read(buffer *bytepacketbuffer.PacketBuffer) DnsRecord {
 
 	switch qtype {
 	case querytype.NS:
-		ns := ""
-		ns, _ = buffer.ReadQname(ns)
-		return DnsRecord{
-			NS: &NSRecord{
-				domain: domain,
-				host:   ns,
-				ttl:    ttl,
-			},
+		ns, _ := buffer.ReadQname()
+		dr.NS = &NSRecord{
+			domain: domain,
+			host:   ns,
+			ttl:    ttl,
 		}
+		return *dr
 	case querytype.CNAME:
-		cname := ""
-		cname, _ = buffer.ReadQname(cname)
-
-		return DnsRecord{
-			CNAME: &CNAMERecord{
-				domain: domain,
-				host:   cname,
-				ttl:    ttl,
-			},
+		cname, _ := buffer.ReadQname()
+		dr.CNAME = &CNAMERecord{
+			domain: domain,
+			host:   cname,
+			ttl:    ttl,
 		}
+		return *dr
 	case querytype.MX:
 		priority, _ := buffer.Read_u16()
-		mx := ""
-		mx, _ = buffer.ReadQname(mx)
-
-		return DnsRecord{
-			MX: &MXRecord{
-				domain:   domain,
-				priority: priority,
-				host:     mx,
-				ttl:      ttl,
-			},
+		mx, _ := buffer.ReadQname()
+		dr.MX = &MXRecord{
+			domain:   domain,
+			priority: priority,
+			host:     mx,
+			ttl:      ttl,
 		}
+		return *dr
+
 	case querytype.A:
 		rawAddress, _ := buffer.Read_u32()
 		ipAddress := net.IPv4(byte(rawAddress>>24&0xFF), byte(rawAddress>>16&0xFF), byte(rawAddress>>8&0xFF), byte(rawAddress>>0&0xFF))
-
-		return DnsRecord{
-			A: &ARecord{
-				domain: domain,
-				addr:   ipAddress.String(),
-				ttl:    ttl,
-			},
+		dr.A = &ARecord{
+			domain: domain,
+			addr:   ipAddress.String(),
+			ttl:    ttl,
 		}
+		return *dr
+
 	case querytype.AAAA:
 		rawAddr_1, _ := buffer.Read_u32()
 		rawAddr_2, _ := buffer.Read_u32()
@@ -129,25 +120,22 @@ func (dr *DnsRecord) Read(buffer *bytepacketbuffer.PacketBuffer) DnsRecord {
 			byte(rawAddr_3 >> 24), byte(rawAddr_3 >> 16), byte(rawAddr_3 >> 8), byte(rawAddr_3),
 			byte(rawAddr_4 >> 24), byte(rawAddr_4 >> 16), byte(rawAddr_4 >> 8), byte(rawAddr_4),
 		}
-
-		return DnsRecord{
-			AAAA: &AAAARecord{
-				domain: domain,
-				addr:   addr.String(),
-				ttl:    ttl,
-			},
+		dr.AAAA = &AAAARecord{
+			domain: domain,
+			addr:   addr.String(),
+			ttl:    ttl,
 		}
+		return *dr
 	case querytype.UNKNOWN:
 		buffer.Step(uint(dataLength))
-
-		return DnsRecord{
-			Unknown: &UnknownRecord{
-				domain:     domain,
-				qtype:      qtypeNumber,
-				dataLength: dataLength,
-				ttl:        ttl,
-			},
+		dr.Unknown = &UnknownRecord{
+			domain:     domain,
+			qtype:      qtypeNumber,
+			dataLength: dataLength,
+			ttl:        ttl,
 		}
+
+		return *dr
 	default:
 		buffer.Step(uint(dataLength))
 
@@ -161,7 +149,6 @@ func (dr *DnsRecord) Read(buffer *bytepacketbuffer.PacketBuffer) DnsRecord {
 		}
 	}
 
-	return DnsRecord{}
 }
 
 func (a *ARecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
@@ -189,9 +176,9 @@ func (ns *NSRecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
 	buffer.WriteQname(ns.domain)
 	buffer.Write_uint16(uint16(querytype.NS))
 	buffer.Write_uint16(1) // IN Class
+	buffer.Write_uint32(ns.ttl)
 
 	pos := buffer.Pos()
-
 	buffer.Write_uint16(0) // Set Placeholder for the NS Host length
 
 	buffer.WriteQname(ns.host)
@@ -207,7 +194,7 @@ func (mx *MXRecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
 	buffer.Write_uint32(mx.ttl)
 
 	pos := buffer.Pos()
-	buffer.Write_uint32(0) // Set Placeholder for MX data length
+	buffer.Write_uint16(0) // Set Placeholder for MX data length
 
 	buffer.Write_uint16(mx.priority)
 	buffer.WriteQname(mx.host)
@@ -238,10 +225,14 @@ func (aaaa *AAAARecord) Write(buffer *bytepacketbuffer.PacketBuffer) {
 	buffer.Write_uint32(aaaa.ttl)
 	buffer.Write_uint16(16) // length of IPv6
 
-	for i := 0; i < len(aaaa.addr); i += 2 {
-		val := uint16(aaaa.addr[i])<<8 | uint16(aaaa.addr[i+1])
+	ip := net.ParseIP(aaaa.addr)
+	ip = ip.To16()
+
+	for i := 0; i < len(ip); i += 2 {
+		val := uint16(ip[i])<<8 | uint16(ip[i+1])
 		buffer.Write_uint16(val)
 	}
+
 }
 
 func (dr *DnsRecord) Write(buffer *bytepacketbuffer.PacketBuffer) (uint, error) {
@@ -252,10 +243,10 @@ func (dr *DnsRecord) Write(buffer *bytepacketbuffer.PacketBuffer) (uint, error) 
 		dr.A.Write(buffer)
 	case dr.NS != nil:
 		dr.NS.Write(buffer)
-	case dr.MX != nil:
-		dr.MX.Write(buffer)
 	case dr.CNAME != nil:
 		dr.CNAME.Write(buffer)
+	case dr.MX != nil:
+		dr.MX.Write(buffer)
 	case dr.AAAA != nil:
 		dr.AAAA.Write(buffer)
 	case dr.Unknown != nil:

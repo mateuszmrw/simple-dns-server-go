@@ -21,62 +21,62 @@ func NewPacketBuffer() PacketBuffer {
 	}
 }
 
-func (bpb PacketBuffer) Pos() uint {
-	return bpb.position
+func (pb PacketBuffer) Pos() uint {
+	return pb.position
 }
 
-func (bpb *PacketBuffer) Step(steps uint) {
-	bpb.position += steps
+func (pb *PacketBuffer) Step(steps uint) {
+	pb.position += steps
 }
 
-func (bpb *PacketBuffer) SetPosition(pos uint) {
-	bpb.position = pos
+func (pb *PacketBuffer) SetPosition(pos uint) {
+	pb.position = pos
 }
 
-func (bpb *PacketBuffer) SetValue_u8(pos uint, val uint8) {
-	bpb.Buffer[pos] = val
+func (pb *PacketBuffer) SetValue_u8(pos uint, val uint8) {
+	pb.Buffer[pos] = val
 }
 
-func (bpb *PacketBuffer) SetValue_u16(pos uint, val uint16) {
-	bpb.SetValue_u8(pos, uint8(val>>8))
-	bpb.SetValue_u8(pos+1, uint8(val&0xFF))
+func (pb *PacketBuffer) SetValue_u16(pos uint, val uint16) {
+	pb.SetValue_u8(pos, uint8(val>>8))
+	pb.SetValue_u8(pos+1, uint8(val&0xFF))
 }
 
 // Read single byte and move the position one step forward
-func (bpb *PacketBuffer) Read() (byte, error) {
-	if bpb.Pos() >= bufferSize {
+func (pb *PacketBuffer) Read() (byte, error) {
+	if pb.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return 0, newError
 	}
 
-	response := bpb.Buffer[bpb.position]
-	bpb.position += 1
+	response := pb.Buffer[pb.position]
+	pb.position += 1
 	return response, nil
 }
 
 // Get a single byte, without changing the buffer position
-func (bpb PacketBuffer) Get(pos uint) (byte, error) {
-	if bpb.Pos() >= bufferSize {
+func (pb PacketBuffer) Get(pos uint) (byte, error) {
+	if pb.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return 0, newError
 	}
-	return bpb.Buffer[pos], nil
+	return pb.Buffer[pos], nil
 }
 
-func (bpb PacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
+func (pb PacketBuffer) GetRange(start uint, len uint) ([]byte, error) {
 	if start+len >= bufferSize {
 		return nil, errEndOfBuffer
 	}
-	buffer := bpb.Buffer[start : start+len]
+	buffer := pb.Buffer[start : start+len]
 	return buffer, nil
 }
 
-func (bpb *PacketBuffer) Read_u16() (uint16, error) {
-	hi, err := bpb.Read()
+func (pb *PacketBuffer) Read_u16() (uint16, error) {
+	hi, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
-	lo, err := bpb.Read()
+	lo, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
@@ -84,20 +84,20 @@ func (bpb *PacketBuffer) Read_u16() (uint16, error) {
 	return result, nil
 }
 
-func (bpb *PacketBuffer) Read_u32() (uint32, error) {
-	hi1, err := bpb.Read()
+func (pb *PacketBuffer) Read_u32() (uint32, error) {
+	hi1, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
-	hi2, err := bpb.Read()
+	hi2, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
-	lo1, err := bpb.Read()
+	lo1, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
-	lo2, err := bpb.Read()
+	lo2, err := pb.Read()
 	if err != nil {
 		return 0, err
 	}
@@ -105,13 +105,13 @@ func (bpb *PacketBuffer) Read_u32() (uint32, error) {
 	return result, nil
 }
 
-func (bpb *PacketBuffer) ReadQname(name string) (string, error) {
+func (pb *PacketBuffer) ReadQname() (string, error) {
 	var labels []string
 	var returnPos *uint
 
-	parseData := bpb.Buffer
-	pos := bpb.position
-	largestPos := len(bpb.Buffer)
+	parseData := pb.Buffer
+	pos := pb.position
+	largestPos := len(pb.Buffer)
 
 	for {
 		if len(parseData) <= int(pos) {
@@ -127,7 +127,7 @@ func (bpb *PacketBuffer) ReadQname(name string) (string, error) {
 			}
 
 			offset := int(parseData[pos-1]&0x3F)<<8 | int(parseData[pos])
-			if offset >= len(bpb.Buffer) {
+			if offset >= len(pb.Buffer) {
 				return "", errors.New("unexpected EOF")
 			}
 
@@ -142,7 +142,7 @@ func (bpb *PacketBuffer) ReadQname(name string) (string, error) {
 
 			largestPos = offset
 			pos = 0
-			parseData = bpb.Buffer[offset:]
+			parseData = pb.Buffer[offset:]
 		} else if length&0xC0 == 0 {
 			end := int(pos) + int(length)
 			if len(parseData) < end {
@@ -165,61 +165,61 @@ func (bpb *PacketBuffer) ReadQname(name string) (string, error) {
 	}
 
 	if returnPos != nil {
-		bpb.position = *returnPos + 2
+		pb.position = *returnPos + 2
 	} else {
-		bpb.position = pos + 1
+		pb.position = pos + 1
 	}
 
 	return strings.Join(labels, "."), nil
 }
 
-func (b *PacketBuffer) Write(val uint8) error {
-	if b.Pos() >= bufferSize {
+func (pb *PacketBuffer) Write(val uint8) error {
+	if pb.Pos() >= bufferSize {
 		newError := errEndOfBuffer
 		return newError
 	}
-	b.Buffer[b.Pos()] = val
-	b.position += 1
+	pb.Buffer[pb.Pos()] = val
+	pb.position += 1
 	return nil
 }
 
-func (b *PacketBuffer) Write_uint8(val uint8) error {
-	return b.Write(val)
+func (pb *PacketBuffer) Write_uint8(val uint8) error {
+	return pb.Write(val)
 }
 
-func (bpb *PacketBuffer) Write_uint16(val uint16) error {
-	bpb.Write(uint8(val >> 8))
-	bpb.Write(uint8(val & 0xFF))
+func (pb *PacketBuffer) Write_uint16(val uint16) error {
+	pb.Write(uint8(val >> 8))
+	pb.Write(uint8(val & 0xFF))
 	return nil
 }
 
-func (b *PacketBuffer) Write_uint32(val uint32) error {
-	b.Write(uint8(((val >> 24) & 0xFF)))
-	b.Write(uint8(((val >> 16) & 0xFF)))
-	b.Write(uint8(((val >> 8) & 0xFF)))
-	b.Write(uint8(((val >> 0) & 0xFF)))
+func (pb *PacketBuffer) Write_uint32(val uint32) error {
+	pb.Write(uint8(((val >> 24) & 0xFF)))
+	pb.Write(uint8(((val >> 16) & 0xFF)))
+	pb.Write(uint8(((val >> 8) & 0xFF)))
+	pb.Write(uint8(((val >> 0) & 0xFF)))
 	return nil
 }
 
-func (b *PacketBuffer) WriteQname(qname string) error {
+func (pb *PacketBuffer) WriteQname(qname string) error {
 	for _, label := range strings.Split(qname, ".") {
 		len := len(label)
 		if len > 0x3F {
-			return errors.New("Single label exceeds 63 characters of length")
+			return errors.New("single label exceeds 63 characters of length")
 		}
 
-		e := b.Write_uint8(uint8(len))
+		e := pb.Write_uint8(uint8(len))
 		if e != nil {
 			return e
 		}
 		for _, byteVal := range []byte(label) {
-			e := b.Write_uint8(byteVal)
+			e := pb.Write_uint8(byteVal)
 			if e != nil {
 				return e
 			}
 		}
 	}
-	err := b.Write_uint8(uint8(0))
+	err := pb.Write_uint8(uint8(0))
 	if err != nil {
 		return err
 	}

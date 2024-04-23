@@ -18,7 +18,7 @@ func NewQuestion(name string, qtype querytype.QueryType) *DnsQuestion {
 }
 
 func (dn *DnsQuestion) Read(buffer *bytepacketbuffer.PacketBuffer) {
-	dn.Name, _ = buffer.ReadQname(dn.Name)
+	dn.Name, _ = buffer.ReadQname()
 	qtBuffer, _ := buffer.Read_u16()
 	dn.Qtype = querytype.QueryType(qtBuffer) // qtype
 	_, _ = buffer.Read_u16()                 // class
